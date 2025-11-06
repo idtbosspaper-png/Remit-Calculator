@@ -1,0 +1,262 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>USD ⇄ NGN Remit Calculator</title>
+  <style>
+    :root{
+      --bg:#0f1220;
+      --card:#121c2a;
+      --muted:#8ea8c7;
+      --text:#e7f0ff;
+      --accent:#66b3ff;
+      --ring:#47d3ff;
+      --ok:#1ad19a;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:16px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{
+      min-height:100%;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:42px 18px 72px;
+    }
+    .page{
+      width:100%;
+      max-width:980px;
+      background:transparent;
+    }
+    h1{
+      margin:0 0 18px;
+      text-align:center;
+      font-weight:800;
+      letter-spacing:.2px;
+      font-size: clamp(22px, 3.2vw, 34px);
+    }
+    .lead{
+      text-align:center;
+      color:var(--muted);
+      margin-bottom:20px;
+      font-size:14px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .grid{
+      display:grid;
+      gap:16px;
+      grid-template-columns:1fr;
+    }
+    @media (min-width: 860px){
+      .grid{grid-template-columns:1fr 1fr;}
+    }
+
+    label{
+      display:block;
+      font-weight:700;
+      margin:8px 0 6px;
+    }
+    .hint{color:var(--muted);font-size:13px;margin:2px 0 8px}
+
+    input[type="number"]{
+      width:100%;
+      border:1px solid rgba(255,255,255,.12);
+      background:#0d1623;
+      color:var(--text);
+      border-radius:12px;
+      padding:14px 16px;
+      outline:none;
+      font-size:16px;
+      transition:border .15s, box-shadow .15s;
+    }
+    input:focus{
+      border-color:var(--ring);
+      box-shadow:0 0 0 3px rgba(71,211,255,.15);
+    }
+
+    .panel{
+      padding:14px;
+      border:1px dashed rgba(255,255,255,.12);
+      border-radius:12px;
+      background:rgba(0,0,0,.15);
+      min-height:190px;
+    }
+    .panel h3{margin:0 0 8px;font-size:18px;font-weight:800;letter-spacing:.2px}
+    .row{display:flex;justify-content:space-between;gap:14px;margin:6px 0}
+    .label{color:var(--muted)}
+    .value{font-weight:800}
+    .ok{color:var(--ok)}
+    .accent{color:var(--accent)}
+
+    .bar{
+      display:flex;gap:10px;align-items:center;justify-content:space-between;margin:18px 0 12px
+    }
+    .btn{
+      border:1px solid rgba(255,255,255,.14);
+      background:#0d1623;
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .btn:hover{border-color:var(--ring)}
+    .footer{text-align:center;color:var(--muted);font-size:13px;margin-top:16px}
+    .fine{text-align:center;color:var(--muted);font-size:12px;margin-top:10px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="page">
+      <h1>USD ⇄ NGN Remit Calculator</h1>
+      <p class="lead">Enter a rate and either the USD you’re sending or the NGN you want to deliver. Updated fee rule applies: 1.5% after $1000.</p>
+
+      <div class="card" style="margin-bottom:14px">
+        <label for="rate">Rate — <strong>1 USD</strong> = (<strong>NGN</strong>)</label>
+        <input id="rate" type="number" inputmode="decimal" placeholder="e.g., 1600" step="0.01" />
+        <p class="hint">Tip: update this rate anytime. All results update instantly.</p>
+      </div>
+
+      <section class="grid">
+        <!-- Left: USD -> NGN -->
+        <div class="card">
+          <div class="bar">
+            <h3 style="margin:0">Send USD → Get NGN</h3>
+            <button class="btn" id="clearUSD">Clear</button>
+          </div>
+
+          <label for="usd">Sending Amt (USD)</label>
+          <input id="usd" type="number" inputmode="decimal" placeholder="Enter USD" step="0.01"/>
+
+          <div class="panel" style="margin-top:12px">
+            <div class="row">
+              <div class="label">Foreign Amt (NGN):</div>
+              <div class="value accent" id="ngnOut">₦0</div>
+            </div>
+            <div class="row">
+              <div class="label">Fee (USD):</div>
+              <div class="value" id="feeOut">$0.00</div>
+            </div>
+            <div class="row">
+              <div class="label">Total Due (USD):</div>
+              <div class="value ok" id="dueOut">$0.00</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: NGN target -> USD needed -->
+        <div class="card">
+          <div class="bar">
+            <h3 style="margin:0">Target NGN → Collect USD</h3>
+            <button class="btn" id="clearNGN">Clear</button>
+          </div>
+
+          <label for="ngn">Desired NGN</label>
+          <input id="ngn" type="number" inputmode="decimal" placeholder="Enter NGN" step="0.01"/>
+
+          <div class="panel" style="margin-top:12px">
+            <div class="row">
+              <div class="label">USD to remit (before fee):</div>
+              <div class="value accent" id="usdBefore">$0.00</div>
+            </div>
+            <div class="row">
+              <div class="label">Fee (USD):</div>
+              <div class="value" id="feeBack">$0.00</div>
+            </div>
+            <div class="row">
+              <div class="label">Total to collect (USD):</div>
+              <div class="value ok" id="collect">$0.00</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <p class="fine">
+        Fee tiers: <strong>$1–$50 → $5</strong> • <strong>$51–$500 → $10</strong> • <strong>$501–$1000 → $15</strong> • <strong>Over $1000 → $15 + 1.5% of excess</strong>
+      </p>
+
+      <p class="footer">Developed by Ibrahim Harris</p>
+    </main>
+  </div>
+
+  <script>
+    const fmtUSD = new Intl.NumberFormat('en-US', { style:'currency', currency:'USD' });
+    const fmtNGN = new Intl.NumberFormat('en-NG', { style:'currency', currency:'NGN', maximumFractionDigits: 0 });
+
+    const rateEl = document.getElementById('rate');
+    const usdEl  = document.getElementById('usd');
+    const ngnOut = document.getElementById('ngnOut');
+    const feeOut = document.getElementById('feeOut');
+    const dueOut = document.getElementById('dueOut');
+    const clearUSDBtn = document.getElementById('clearUSD');
+
+    const ngnEl    = document.getElementById('ngn');
+    const usdBefore= document.getElementById('usdBefore');
+    const feeBack  = document.getElementById('feeBack');
+    const collect  = document.getElementById('collect');
+    const clearNGNBtn = document.getElementById('clearNGN');
+
+    // Updated fee rule with 1.5% after $1000
+    function calcFee(usd){
+      if (usd <= 0 || isNaN(usd)) return 0;
+      if (usd <= 50) return 5;
+      if (usd <= 500) return 10;
+      if (usd <= 1000) return 15;
+      // After $1000, add 1.5% of amount above 1000
+      return 15 + ((usd - 1000) * 0.015);
+    }
+
+    function updateUSDToNGN(){
+      const rate = parseFloat(rateEl.value);
+      const usd  = parseFloat(usdEl.value);
+      if (!rate || !usd){
+        ngnOut.textContent = '₦0';
+        feeOut.textContent = fmtUSD.format(0);
+        dueOut.textContent = fmtUSD.format(0);
+        return;
+      }
+      const ngn = Math.round(usd * rate);
+      const fee = calcFee(usd);
+      const totalDue = usd + fee;
+      ngnOut.textContent = fmtNGN.format(ngn);
+      feeOut.textContent = fmtUSD.format(fee);
+      dueOut.textContent = fmtUSD.format(totalDue);
+    }
+
+    function updateNGNToUSD(){
+      const rate = parseFloat(rateEl.value);
+      const ngn  = parseFloat(ngnEl.value);
+      if (!rate || !ngn){
+        usdBefore.textContent = fmtUSD.format(0);
+        feeBack.textContent   = fmtUSD.format(0);
+        collect.textContent   = fmtUSD.format(0);
+        return;
+      }
+      const usdNeeded = ngn / rate;
+      const fee = calcFee(usdNeeded);
+      const totalCollect = usdNeeded + fee;
+      usdBefore.textContent = fmtUSD.format(usdNeeded);
+      feeBack.textContent   = fmtUSD.format(fee);
+      collect.textContent   = fmtUSD.format(totalCollect);
+    }
+
+    [rateEl, usdEl].forEach(el => el.addEventListener('input', updateUSDToNGN));
+    [rateEl, ngnEl].forEach(el => el.addEventListener('input', updateNGNToUSD));
+    clearUSDBtn.addEventListener('click', () => { usdEl.value=''; updateUSDToNGN(); });
+    clearNGNBtn.addEventListener('click', () => { ngnEl.value=''; updateNGNToUSD(); });
+
+    rateEl.value = '';
+    updateUSDToNGN();
+    updateNGNToUSD();
+  </script>
+</body>
+</html>
